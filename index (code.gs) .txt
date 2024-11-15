@@ -1,0 +1,44 @@
+function doPost(e) {
+    const sheet = SpreadsheetApp.openById('1IxtwFStoWZYcBSpO1yJarTazRaUDeVRAe7A7VBjj5Jw').getSheetByName('TDM');
+
+    const playerDetails = e.parameter.playerDetails; // Player details from the HTML form
+    const totalAmount = e.parameter.totalAmount; // Total amount from the HTML form
+    const imageUrl = e.parameter.imageUrl; // Image URL from the HTML form
+
+    // Column G (7th column) and second row to store team details
+    const targetCell = sheet.getRange(2, 7); // G2 cell
+
+    // Get the existing content in G2 and count the number of teams
+    const existingContent = targetCell.getValue();
+    const teams = existingContent ? existingContent.split(/\n\n/) : []; // Split by double newline for separate teams
+
+    // Check if the number of teams is below the maximum limit
+    const maxTeams = 25;
+    if (teams.length >= maxTeams) {
+        return ContentService.createTextOutput(JSON.stringify({ result: 'error', message: `Maximum team limit of ${maxTeams} reached.` }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Prepare new team details
+    const newTeamDetails = `Team ${teams.length + 1}:\n${playerDetails}\nImage URL: ${imageUrl}\nTotal Amount: ₹${totalAmount}`;
+
+    // Combine the existing content with the new team details
+    const updatedContent = existingContent ? `${existingContent}\n\n${newTeamDetails}` : newTeamDetails;
+
+    // Save the updated content in the G2 cell
+    targetCell.setValue(updatedContent);
+
+    return ContentService.createTextOutput(JSON.stringify({ result: 'success' })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet() {
+    const sheet = SpreadsheetApp.openById('1IxtwFStoWZYcBSpO1yJarTazRaUDeVRAe7A7VBjj5Jw').getSheetByName('TDM');
+    const price = sheet.getRange('F2').getValue(); // Get value from F2
+
+    // Get the existing content in G2 and count the number of teams
+    const existingContent = sheet.getRange(2, 7).getValue(); // G2 cell
+    const teams = existingContent ? existingContent.split(/\n\n/) : []; // Split by double newline for separate teams
+    const currentTeamsCount = teams.length; // Get current number of teams
+
+    return ContentService.createTextOutput(JSON.stringify({ price: price, currentTeamsCount: currentTeamsCount })).setMimeType(ContentService.MimeType.JSON);
+}
